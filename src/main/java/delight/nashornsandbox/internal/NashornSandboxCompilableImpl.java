@@ -1,5 +1,6 @@
 package delight.nashornsandbox.internal;
 
+import delight.nashornsandbox.CompiledInfo;
 import delight.nashornsandbox.NashornSandboxCompilable;
 
 import javax.script.Compilable;
@@ -23,26 +24,34 @@ public class NashornSandboxCompilableImpl extends NashornSandboxImpl implements 
     }
 
     @Override
-    public CompiledScript compile(String jsPath) {
-        CompiledScript cscript = null;
+    public CompiledInfo compile(String jsPath) {
+        CompiledInfo compiledInfo = new CompiledInfo();
         try {
             assertCompilable();
             ClassLoader classloader = Thread.currentThread().getContextClassLoader();
             InputStream is = classloader.getResourceAsStream(jsPath);
             InputStreamReader isr = new InputStreamReader(is);
-            cscript = compilingEngine.compile(isr);
+            CompiledScript cscript = compilingEngine.compile(isr);
             cscript.eval();
+
+            compiledInfo.setCompiledScript(cscript);
+            compiledInfo.setScriptAsString(isr.toString());
+
         } catch (ScriptException e) {
             e.printStackTrace();
         } catch (Throwable e) {
             e.printStackTrace();
         }
-        return cscript;
+        return compiledInfo;
     }
 
     @Override
-    public void invokeFunction(CompiledScript cscript, String functionName, Object param) {
-
+    public void invokeFunction(CompiledInfo compiledInfo, String functionName, Object param) {
+        securedExecution(compiledInfo.getScriptAsString(), compiledInfo.getCompiledScript(), functionName, param);
     }
 
+    @Override
+    protected void execution(String js, CompiledScript csript, String functionName, Object param) {
+        // TODO
+    }
 }

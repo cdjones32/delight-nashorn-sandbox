@@ -7,16 +7,14 @@ import javax.script.CompiledScript;
  */
 public interface NashornSandboxCompilable extends NashornSandbox {
 
-
-
     /**
      * Compile JavaScript by resource path.
      */
-    public abstract CompiledScript compile(final String jsPath);
+    public CompiledInfo compile(final String jsPath);
 
     /**
      * Compile execute a compiled mathod of a js.
      */
-    public abstract void invokeFunction(CompiledScript cscript, String functionName, Object param);
+    public void invokeFunction(CompiledInfo compiledInfo, String functionName, Object param);
 
 }
