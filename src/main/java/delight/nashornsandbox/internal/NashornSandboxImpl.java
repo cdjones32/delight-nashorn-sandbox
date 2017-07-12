@@ -8,12 +8,34 @@ public class NashornSandboxImpl extends NashornSandboxAbstract {
 
   @Override
   public Object eval(final String js) {
-    return securedExecution(js, null, null, null);
+    JsExecutor jsExecutor = new JsExecutor();
+    jsExecutor.setJs(js);
+    return securedExecution(jsExecutor);
   }
 
   @Override
-  protected void execution(String js, CompiledScript csript, String functionName, Object param) throws ScriptException {
-    // TODO Check this
-    //scriptEngine.eval(js);
+  protected Object singleExecutionSimple(JsExecutor jsExecutor) throws ScriptException {
+    return scriptEngine.eval(jsExecutor.getJs());
   }
+
+  @Override
+  protected Object singleExecutionSecured(JsExecutor jsExecutor) throws ScriptException {
+    return scriptEngine.eval(jsExecutor.getJs());
+  }
+
+  @Override
+  protected String printable(JsExecutor jsExecutor) {
+    return jsExecutor.getJs();
+  }
+
+  @Override
+  protected String printableSecured(JsExecutor jsExecutor) {
+    return jsExecutor.getJs();
+  }
+
+  @Override
+  protected int getRandomToken(JsExecutor jsExecutor) {
+    return jsExecutor.getRandomToken();
+  }
+
 }

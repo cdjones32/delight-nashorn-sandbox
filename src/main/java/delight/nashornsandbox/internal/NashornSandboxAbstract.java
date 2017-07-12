@@ -128,7 +128,7 @@ public abstract class NashornSandboxAbstract implements NashornSandbox {
     return _xblockexpression;
   }
 
-  protected Object securedExecution(final String js, final CompiledScript csript, final String functionName, final Object param) {
+  protected Object securedExecution(final JsExecutor jsExecutor) {
     try {
       Object _xblockexpression = null;
       {
@@ -136,10 +136,10 @@ public abstract class NashornSandboxAbstract implements NashornSandbox {
         if (((this.maxCPUTimeInMs).longValue() == 0)) {
           if (this.debug) {
             InputOutput.<String>println("--- Running JS ---");
-            InputOutput.<String>println(js);
+            InputOutput.<String>println(printable(jsExecutor));
             InputOutput.<String>println("--- JS END ---");
           }
-          return this.scriptEngine.eval(js);
+          return singleExecutionSimple(jsExecutor);
         }
         Object _xsynchronizedexpression = null;
         synchronized (this) {
@@ -155,45 +155,9 @@ public abstract class NashornSandboxAbstract implements NashornSandbox {
             final Object monitor = new Object();
             final Runnable _function = () -> {
               try {
-                boolean _contains = js.contains("intCheckForInterruption");
-                if (_contains) {
-                  throw new IllegalArgumentException(
-                    "Script contains the illegal string [intCheckForInterruption]");
-                }
-                Object _eval = this.scriptEngine.eval("window.js_beautify;");
-                final ScriptObjectMirror jsBeautify = ((ScriptObjectMirror) _eval);
-                Object _call = jsBeautify.call("beautify", js);
-                final String beautifiedJs = ((String) _call);
-                final int randomToken = Math.abs(new Random().nextInt());
-                StringConcatenation _builder = new StringConcatenation();
-                _builder.append("var InterruptTest = Java.type(\'");
-                String _name = InterruptTest.class.getName();
-                _builder.append(_name);
-                _builder.append("\');");
-                _builder.newLineIfNotEmpty();
-                _builder.append("var isInterrupted = InterruptTest.isInterrupted;");
-                _builder.newLine();
-                _builder.append("var intCheckForInterruption");
-                _builder.append(randomToken);
-                _builder.append(" = function() {");
-                _builder.newLineIfNotEmpty();
-                _builder.append("\t");
-                _builder.append("if (isInterrupted()) {");
-                _builder.newLine();
-                _builder.append("\t    ");
-                _builder.append("throw new Error(\'Interrupted");
-                _builder.append(randomToken, "\t    ");
-                _builder.append("\')");
-                _builder.newLineIfNotEmpty();
-                _builder.append("\t");
-                _builder.append("}");
-                _builder.newLine();
-                _builder.append("};");
-                _builder.newLine();
-                String preamble = _builder.toString();
-                preamble = preamble.replace("\n", "");
-                String _injectInterruptionCalls = NashornSandboxAbstract.injectInterruptionCalls(beautifiedJs, randomToken);
-                final String securedJs = (preamble + _injectInterruptionCalls);
+
+                JsExecutor jsExecutorSecured = jsExecutor.isTransformableInRuntime()?transformJs(jsExecutor):jsExecutor;
+
                 final Thread mainThread = Thread.currentThread();
                 monitorThread.setThreadToMonitor(Thread.currentThread());
                 final Runnable _function_1 = () -> {
@@ -204,15 +168,15 @@ public abstract class NashornSandboxAbstract implements NashornSandbox {
                 try {
                   if (this.debug) {
                     InputOutput.<String>println("--- Running JS ---");
-                    InputOutput.<String>println(securedJs);
+                    InputOutput.<String>println(printableSecured(jsExecutorSecured));
                     InputOutput.<String>println("--- JS END ---");
                   }
-                  final Object res = this.scriptEngine.eval(securedJs);
+                  final Object res = singleExecutionSecured(jsExecutorSecured);
                   resVal.set(res);
                 } catch (final Throwable _t) {
                   if (_t instanceof ScriptException) {
                     final ScriptException e = (ScriptException)_t;
-                    boolean _contains_1 = e.getMessage().contains(("Interrupted" + Integer.valueOf(randomToken)));
+                    boolean _contains_1 = e.getMessage().contains(("Interrupted" + Integer.valueOf(getRandomToken(jsExecutorSecured))));
                     if (_contains_1) {
                       monitorThread.notifyOperationInterrupted();
                     } else {
@@ -278,14 +242,83 @@ public abstract class NashornSandboxAbstract implements NashornSandbox {
     }
   }
 
-  /**
-   *  Abstract method to handle both direct evaluations and compiled and function-focused
-   * @param js
-   * @param csript
-   * @param functionName
-   * @param param
+  /*
+   * Abstract method to handle not secured executions
    */
-  protected abstract void execution(String js, CompiledScript csript, String functionName, Object param) throws ScriptException;
+  protected abstract Object singleExecutionSimple(JsExecutor jsExecutor) throws ScriptException;
+
+  /*
+   * Abstract method to handle not secured executions
+   */
+  protected abstract Object singleExecutionSecured(JsExecutor jsExecutor) throws ScriptException;
+
+  /*
+   * Return printable information
+   */
+  protected abstract String printable(JsExecutor jsExecutor);
+
+  /*
+   * Return printable secured information
+   */
+  protected abstract String printableSecured(JsExecutor jsExecutor);
+
+  /*
+   * Retrieves the random token to handle the interruption
+   */
+  protected abstract int getRandomToken(JsExecutor jsExecutor);
+
+  /*
+   * Enrichment of the original Js for the security
+   */
+  protected JsExecutor transformJs(JsExecutor jsExecutor) throws ScriptException {
+
+    String js = jsExecutor.getJs();
+
+    boolean _contains = js.contains("intCheckForInterruption");
+    if (_contains) {
+      throw new IllegalArgumentException(
+              "Script contains the illegal string [intCheckForInterruption]");
+    }
+    Object _eval = this.scriptEngine.eval("window.js_beautify;");
+    final ScriptObjectMirror jsBeautify = ((ScriptObjectMirror) _eval);
+    Object _call = jsBeautify.call("beautify", js);
+    final String beautifiedJs = ((String) _call);
+    final int randomToken = Math.abs(new Random().nextInt());
+    StringConcatenation _builder = new StringConcatenation();
+    _builder.append("var InterruptTest = Java.type(\'");
+    String _name = InterruptTest.class.getName();
+    _builder.append(_name);
+    _builder.append("\');");
+    _builder.newLineIfNotEmpty();
+    _builder.append("var isInterrupted = InterruptTest.isInterrupted;");
+    _builder.newLine();
+    _builder.append("var intCheckForInterruption");
+    _builder.append(randomToken);
+    _builder.append(" = function() {");
+    _builder.newLineIfNotEmpty();
+    _builder.append("\t");
+    _builder.append("if (isInterrupted()) {");
+    _builder.newLine();
+    _builder.append("\t    ");
+    _builder.append("throw new Error(\'Interrupted");
+    _builder.append(randomToken, "\t    ");
+    _builder.append("\')");
+    _builder.newLineIfNotEmpty();
+    _builder.append("\t");
+    _builder.append("}");
+    _builder.newLine();
+    _builder.append("};");
+    _builder.newLine();
+    String preamble = _builder.toString();
+    preamble = preamble.replace("\n", "");
+    String _injectInterruptionCalls = NashornSandboxAbstract.injectInterruptionCalls(beautifiedJs, randomToken);
+    final String securedJs = (preamble + _injectInterruptionCalls);
+
+    jsExecutor.setJs(securedJs);
+    jsExecutor.setRandomToken(randomToken);
+
+    return jsExecutor;
+  }
 
   @Override
   public NashornSandbox setMaxCPUTime(final long limit) {

@@ -7,16 +7,26 @@ import javax.script.CompiledScript;
  */
 public class CompiledInfo {
 
-    private CompiledScript compiledScript;
+    private CompiledScript simpleCompiledScript;
+
+    private CompiledScript securedCompiledScript;
 
     private String scriptAsString;
 
-    public CompiledScript getCompiledScript() {
-        return compiledScript;
+    public CompiledScript getSimpleCompiledScript() {
+        return simpleCompiledScript;
     }
 
-    public void setCompiledScript(CompiledScript compiledScript) {
-        this.compiledScript = compiledScript;
+    public void setSimpleCompiledScript(CompiledScript simpleCompiledScript) {
+        this.simpleCompiledScript = simpleCompiledScript;
+    }
+
+    public CompiledScript getSecuredCompiledScript() {
+        return securedCompiledScript;
+    }
+
+    public void setSecuredCompiledScript(CompiledScript securedCompiledScript) {
+        this.securedCompiledScript = securedCompiledScript;
     }
 
     public String getScriptAsString() {

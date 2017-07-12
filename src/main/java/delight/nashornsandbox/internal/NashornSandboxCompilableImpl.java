@@ -31,11 +31,17 @@ public class NashornSandboxCompilableImpl extends NashornSandboxImpl implements 
             ClassLoader classloader = Thread.currentThread().getContextClassLoader();
             InputStream is = classloader.getResourceAsStream(jsPath);
             InputStreamReader isr = new InputStreamReader(is);
-            CompiledScript cscript = compilingEngine.compile(isr);
-            cscript.eval();
 
-            compiledInfo.setCompiledScript(cscript);
-            compiledInfo.setScriptAsString(isr.toString());
+            CompiledScript simpleCscript = compilingEngine.compile(isr);
+            simpleCscript.eval();
+            compiledInfo.setSimpleCompiledScript(simpleCscript);
+
+            String js = isr.toString();
+            compiledInfo.setScriptAsString(js);
+
+            // TODO enrichment before compiling
+
+
 
         } catch (ScriptException e) {
             e.printStackTrace();
@@ -47,11 +53,27 @@ public class NashornSandboxCompilableImpl extends NashornSandboxImpl implements 
 
     @Override
     public void invokeFunction(CompiledInfo compiledInfo, String functionName, Object param) {
-        securedExecution(compiledInfo.getScriptAsString(), compiledInfo.getCompiledScript(), functionName, param);
+        JsExecutorCompilable jsExecutorCompilable = new JsExecutorCompilable();
+        jsExecutorCompilable.setJs(compiledInfo.getScriptAsString());
+        jsExecutorCompilable.setSimpleCompiledScript(compiledInfo.getSimpleCompiledScript());
+        jsExecutorCompilable.setSecuredCompiledScript(compiledInfo.getSecuredCompiledScript());
+        jsExecutorCompilable.setFunctionName(functionName);
+        jsExecutorCompilable.addParams(JsExecutorCompilable.PARAM_FUNCTION, param);
+        securedExecution(jsExecutorCompilable);
     }
 
     @Override
-    protected void execution(String js, CompiledScript csript, String functionName, Object param) {
+    protected Object singleExecutionSimple(JsExecutor jsExecutor) {
+        JsExecutorCompilable jsExecutorCompilable = (JsExecutorCompilable)jsExecutor;
         // TODO
+        return null;
     }
+
+    @Override
+    protected Object singleExecutionSecured(JsExecutor jsExecutor) {
+        JsExecutorCompilable jsExecutorCompilable = (JsExecutorCompilable)jsExecutor;
+        // TODO
+        return null;
+    }
+
 }
