@@ -5,7 +5,9 @@ import delight.nashornsandbox.NashornSandboxCompilable;
 
 import javax.script.Compilable;
 import javax.script.CompiledScript;
+import javax.script.Invocable;
 import javax.script.ScriptException;
+
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
@@ -37,11 +39,19 @@ public class NashornSandboxCompilableImpl extends NashornSandboxImpl implements 
             compiledInfo.setSimpleCompiledScript(simpleCscript);
 
             String js = isr.toString();
-            compiledInfo.setScriptAsString(js);
+            compiledInfo.setSimpleScriptAsString(js);
 
-            // TODO enrichment before compiling
-
-
+            // Secured compilation
+            JsExecutor aux = new JsExecutor();
+            aux.setJs(js);
+            JsExecutor auxSecured = transformJs(aux);
+            
+            String securedJs = auxSecured.getJs();
+            CompiledScript securedCscript = compilingEngine.compile(securedJs);
+            securedCscript.eval();
+            compiledInfo.setSecuredScriptAsString(securedJs);
+            compiledInfo.setSecuredCompiledScript(securedCscript);
+            compiledInfo.setRandomToken(auxSecured.getRandomToken());
 
         } catch (ScriptException e) {
             e.printStackTrace();
@@ -54,26 +64,43 @@ public class NashornSandboxCompilableImpl extends NashornSandboxImpl implements 
     @Override
     public void invokeFunction(CompiledInfo compiledInfo, String functionName, Object param) {
         JsExecutorCompilable jsExecutorCompilable = new JsExecutorCompilable();
-        jsExecutorCompilable.setJs(compiledInfo.getScriptAsString());
+        jsExecutorCompilable.setJs(compiledInfo.getSimpleScriptAsString());        
         jsExecutorCompilable.setSimpleCompiledScript(compiledInfo.getSimpleCompiledScript());
+        jsExecutorCompilable.setSecuredJs(compiledInfo.getSecuredScriptAsString());
         jsExecutorCompilable.setSecuredCompiledScript(compiledInfo.getSecuredCompiledScript());
+        jsExecutorCompilable.setRandomToken(compiledInfo.getRandomToken());
         jsExecutorCompilable.setFunctionName(functionName);
         jsExecutorCompilable.addParams(JsExecutorCompilable.PARAM_FUNCTION, param);
         securedExecution(jsExecutorCompilable);
     }
 
     @Override
-    protected Object singleExecutionSimple(JsExecutor jsExecutor) {
+    protected Object singleExecutionSimple(JsExecutor jsExecutor) throws ScriptException {
         JsExecutorCompilable jsExecutorCompilable = (JsExecutorCompilable)jsExecutor;
-        // TODO
-        return null;
+        Invocable invocable = (Invocable) jsExecutorCompilable.getSimpleCompiledScript().getEngine();
+        try {
+			return invocable.invokeFunction(jsExecutorCompilable.getFunctionName(), jsExecutorCompilable.getParam(JsExecutorCompilable.PARAM_FUNCTION));
+		} catch (NoSuchMethodException e) {
+			throw new ScriptException(e);
+		}
     }
 
     @Override
-    protected Object singleExecutionSecured(JsExecutor jsExecutor) {
+    protected Object singleExecutionSecured(JsExecutor jsExecutor) throws ScriptException {
         JsExecutorCompilable jsExecutorCompilable = (JsExecutorCompilable)jsExecutor;
-        // TODO
-        return null;
+        Invocable invocable = (Invocable) jsExecutorCompilable.getSecuredCompiledScript().getEngine();
+        try {
+			return invocable.invokeFunction(jsExecutorCompilable.getFunctionName(), jsExecutorCompilable.getParam(JsExecutorCompilable.PARAM_FUNCTION));
+		} catch (NoSuchMethodException e) {
+			throw new ScriptException(e);
+		}
     }
+    
+    @Override
+    protected String printableSecured(JsExecutor jsExecutor) {
+        JsExecutorCompilable jsExecutorCompilable = (JsExecutorCompilable)jsExecutor;
+      return jsExecutorCompilable.getSecuredJs();
+    }
+    
 
 }

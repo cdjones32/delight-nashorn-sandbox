@@ -7,11 +7,14 @@ import javax.script.CompiledScript;
  */
 public class CompiledInfo {
 
+	// Simple Js info
+    private String simpleScriptAsString;
     private CompiledScript simpleCompiledScript;
 
+    // Secured Js info
+    private String securedScriptAsString;
     private CompiledScript securedCompiledScript;
-
-    private String scriptAsString;
+    private int randomToken;
 
     public CompiledScript getSimpleCompiledScript() {
         return simpleCompiledScript;
@@ -29,11 +32,28 @@ public class CompiledInfo {
         this.securedCompiledScript = securedCompiledScript;
     }
 
-    public String getScriptAsString() {
-        return scriptAsString;
-    }
+	public String getSimpleScriptAsString() {
+		return simpleScriptAsString;
+	}
 
-    public void setScriptAsString(String scriptAsString) {
-        this.scriptAsString = scriptAsString;
-    }
+	public void setSimpleScriptAsString(String simpleScriptAsString) {
+		this.simpleScriptAsString = simpleScriptAsString;
+	}
+
+	public String getSecuredScriptAsString() {
+		return securedScriptAsString;
+	}
+
+	public void setSecuredScriptAsString(String securedScriptAsString) {
+		this.securedScriptAsString = securedScriptAsString;
+	}
+
+	public int getRandomToken() {
+		return randomToken;
+	}
+
+	public void setRandomToken(int randomToken) {
+		this.randomToken = randomToken;
+	}
+    
 }

@@ -11,7 +11,9 @@ public class JsExecutorCompilable extends JsExecutor {
 
     private CompiledScript simpleCompiledScript;
 
-    private CompiledScript SecuredCompiledScript;
+    private CompiledScript SecuredCompiledScript;    
+    private String securedJs;
+    
 
     private String functionName;
 
@@ -43,4 +45,13 @@ public class JsExecutorCompilable extends JsExecutor {
     public void setFunctionName(String functionName) {
         this.functionName = functionName;
     }
+
+	public String getSecuredJs() {
+		return securedJs;
+	}
+
+	public void setSecuredJs(String securedJs) {
+		this.securedJs = securedJs;
+	}
+    
 }
