@@ -26,7 +26,7 @@ public class NashornSandboxCompilableImpl extends NashornSandboxImpl implements 
     }
 
     @Override
-    public CompiledInfo compile(String jsPath) {
+    public CompiledInfo compile(String jsPath) throws ScriptException {
         CompiledInfo compiledInfo = new CompiledInfo();
         try {
             assertCompilable();
@@ -54,15 +54,15 @@ public class NashornSandboxCompilableImpl extends NashornSandboxImpl implements 
             compiledInfo.setRandomToken(auxSecured.getRandomToken());
 
         } catch (ScriptException e) {
-            e.printStackTrace();
+            throw e;
         } catch (Throwable e) {
-            e.printStackTrace();
+            throw new ScriptException("Throwable error: " + e.getMessage());
         }
         return compiledInfo;
     }
 
     @Override
-    public void invokeFunction(CompiledInfo compiledInfo, String functionName, Object param) {
+    public void invokeFunction(CompiledInfo compiledInfo, String functionName, Object param) throws ScriptException {
         JsExecutorCompilable jsExecutorCompilable = new JsExecutorCompilable();
         jsExecutorCompilable.setJs(compiledInfo.getSimpleScriptAsString());        
         jsExecutorCompilable.setSimpleCompiledScript(compiledInfo.getSimpleCompiledScript());
